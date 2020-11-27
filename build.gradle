@@ -13,7 +13,6 @@ buildscript {
 }
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
-apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'java'
 def snapshotVersion = System.getenv("GITHUB_RUN_NUMBER")
@@ -119,7 +118,6 @@ reobf {
     noToml {}
 }
 tasks.build.dependsOn reobfShadowJar
-publish.dependsOn('reobfJar')
 shadowJar.dependsOn('classes')
 jar.finalizedBy('reobfJar')
 
@@ -183,10 +181,6 @@ artifacts {
 }
 
 afterEvaluate {
-    publish.dependsOn('reobfShadowJar')
-    publish.dependsOn('reobfJar')
-    publish.dependsOn('packageSources')
-    publish.dependsOn('noToml')
     shadowJar.dependsOn(packageSources)
     shadowJar.dependsOn(noToml)
     shadowJar.dependsOn('classes')
@@ -195,27 +189,3 @@ afterEvaluate {
 shadowJar.finalizedBy(reobfShadowJar)
 jar.finalizedBy(packageSources)
 jar.finalizedBy(noToml)
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            artifact shadowJar
-            artifact packageSources
-            artifact noToml
-            artifactId = project.archives_base_name
-        }
-    }
-}
-publishing {
-    repositories {
-        maven {
-            url repsyUrl
-            credentials {
-                def envUsername = System.getenv("repsyUsername")
-                def envPassword = System.getenv("repsyPassword")
-                username = envUsername == null ? findProperty("repsyUsername") : envUsername
-                password = envPassword == null ? findProperty("repsyPassword") : envPassword
-            }
-        }
-    }
-}
